@@ -43,8 +43,8 @@ public class TestOnlineSource {
                 .addConfiguration("isHttp", false)
                 .addConfiguration("isWebsocket", false)
                 .addConfiguration("isPing", true)
-                .addConfiguration("pingInterval", 300)
-                .addConfiguration("pingTimeout", 300)
+                .addConfiguration("pingInterval", 2)
+                .addConfiguration("pingTimeout", 3000)
                 .addConfiguration("ipAddress_maskMap", ipAddressEx)
                 .addOutputLane("lane")
                 .build();

@@ -23,7 +23,6 @@ import com.streamsets.pipeline.api.BatchMaker;
 import com.streamsets.pipeline.api.Field;
 import com.streamsets.pipeline.api.Record;
 import com.streamsets.pipeline.api.base.BaseSource;
-import com.streamsets.stage.lib.Errors;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -59,9 +58,7 @@ public abstract class OnlineSource extends BaseSource {
 
         // If issues is not empty, the UI will inform the user of each configuration issue in the list.
         ipv4List = new ArrayList<>();
-        for( String key : getIPMap().keySet() ){
-            ipv4List.add(new IPv4(key, getIPMap().get(key)));
-        }
+        for( String key : getIPMap().keySet() ){ ipv4List.add(new IPv4(key, getIPMap().get(key))); }
         //System.out.println(ipv4List.size());
         return issues;
     }
@@ -90,6 +87,7 @@ public abstract class OnlineSource extends BaseSource {
         try {
             Record record = getContext().createRecord(String.valueOf(nextSourceOffset));
             Map<String, Field> map = new HashMap<>();
+            long startTime = System.currentTimeMillis();
             if(usePing()) {
                 ipv4List.forEach((item) -> {
                     for (String eachPing : item.getAvailableIPs(65535)) {
@@ -97,14 +95,26 @@ public abstract class OnlineSource extends BaseSource {
                     }
                 });
             }
+            long endTime = System.currentTimeMillis();
+            long interval = getInterval(startTime, endTime);
+
             record.set(Field.create(map));
             batchMaker.addRecord(record);
-            sleep(getPingInterval());
+            System.out.println("pingInterval:" + getPingInterval());
+            System.out.println("elaspedTiem:" + (endTime - startTime));
+            sleep(interval);
             ++nextSourceOffset;
             ++numRecords;
         }
         catch (InterruptedException e) { e.printStackTrace(); }
         finally { return String.valueOf(nextSourceOffset); }
+    }
+    private long getInterval (long startTime, long endTime){
+        long elaspedTime = (endTime - startTime);
+        long interval = getPingInterval()*1000 - elaspedTime;
+        return interval > 0 ? interval : 0;
+
+
     }
     private String runPingCommand(String ip){
         String pingCmd = "ping " + ip;
