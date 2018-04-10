@@ -27,6 +27,7 @@ import com.streamsets.pipeline.api.base.BaseSource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +40,6 @@ import static java.lang.Thread.sleep;
  * It does however, generate generate a simple record with one field.
  */
 public abstract class OnlineSource extends BaseSource {
-
     List <IPv4> ipv4List;
     /**
      * Gives access to the UI configuration of the stage provided by the {@link OnlineDSource} class.
@@ -87,21 +87,21 @@ public abstract class OnlineSource extends BaseSource {
         try {
             Record record = getContext().createRecord(String.valueOf(nextSourceOffset));
             Map<String, Field> map = new HashMap<>();
+            List <Field> list  = new ArrayList<>();
             long startTime = System.currentTimeMillis();
             if(usePing()) {
                 ipv4List.forEach((item) -> {
                     for (String eachPing : item.getAvailableIPs(65535)) {
                         map.put("pingResult", Field.create(runPingCommand(eachPing)));
+                        list.add(Field.create(map));
                     }
                 });
             }
+
             long endTime = System.currentTimeMillis();
             long interval = getInterval(startTime, endTime);
-
-            record.set(Field.create(map));
+            record.set(Field.create(list));
             batchMaker.addRecord(record);
-            System.out.println("pingInterval:" + getPingInterval());
-            System.out.println("elaspedTiem:" + (endTime - startTime));
             sleep(interval);
             ++nextSourceOffset;
             ++numRecords;
@@ -113,25 +113,21 @@ public abstract class OnlineSource extends BaseSource {
         long elaspedTime = (endTime - startTime);
         long interval = getPingInterval()*1000 - elaspedTime;
         return interval > 0 ? interval : 0;
-
-
     }
+
     private String runPingCommand(String ip){
-        String pingCmd = "ping " + ip;
         try {
-            Runtime r = Runtime.getRuntime();
-            Process p = r.exec(pingCmd);
+            Process p = new ProcessBuilder("ping", ip).start();
             BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String inputLine;
             sleep(getPingTimeout());
             if(in.ready()){
                 in.readLine();
                 inputLine = in.readLine();
-                //System.out.println(inputLine);
+                p.destroy();
+                in.close();
                 return inputLine;
             }
-            in.close();
-
         } catch (IOException | NullPointerException e) {
             System.out.println(e);
         } catch (InterruptedException e) {
