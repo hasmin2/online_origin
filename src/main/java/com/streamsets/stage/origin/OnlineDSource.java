@@ -25,8 +25,8 @@ import java.util.Map;
 
 @StageDef(
         version = 1,
-        label = "Sample Origin",
-        description = "",
+        label = "Online Origin",
+        description = "Checks the Host or Subnet has been online",
         icon = "default.png",
         execution = ExecutionMode.STANDALONE,
         recordsByRef = true,
