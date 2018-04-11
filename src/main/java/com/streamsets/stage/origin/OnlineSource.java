@@ -40,7 +40,7 @@ import static java.lang.Thread.sleep;
  * It does however, generate generate a simple record with one field.
  */
 public abstract class OnlineSource extends BaseSource {
-    List <IPv4> ipv4List;
+    private List <IPv4> ipv4List;
     /**
      * Gives access to the UI configuration of the stage provided by the {@link OnlineDSource} class.
      */
@@ -88,7 +88,6 @@ public abstract class OnlineSource extends BaseSource {
             List <Field> list  = new ArrayList<>();
             long startTime = System.currentTimeMillis();
             if(usePing()) {
-                long finalNextSourceOffset = nextSourceOffset;
                 ipv4List.forEach((item) -> {
                     for (String eachPing : item.getAvailableIPs(65535)) {
                         Map<String, Field> map = new HashMap<>();
@@ -98,7 +97,6 @@ public abstract class OnlineSource extends BaseSource {
                         list.add(Field.create(map));
                     }
                 });
-
             }
             long endTime = System.currentTimeMillis();
             long interval = getInterval(startTime, endTime);
