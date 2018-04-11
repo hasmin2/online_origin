@@ -35,8 +35,8 @@ public class TestOnlineSource {
     @Test
     public void testOrigin() throws Exception {
         ipAddressEx = new HashMap<>();
-        String ipAddress = "127.0.0.1";
-        ipAddressEx.put(ipAddress, "255.255.255.0");
+        String ipAddress = "10.50.117.27";
+        ipAddressEx.put(ipAddress, "255.255.255.255");
         //ipAddressEx.put("127.0.1.1", "255.255.255.0");
 
         SourceRunner runner = new SourceRunner.Builder(OnlineDSource.class)
@@ -44,7 +44,7 @@ public class TestOnlineSource {
                 .addConfiguration("isWebsocket", false)
                 .addConfiguration("isPing", true)
                 .addConfiguration("pingInterval", 2)
-                .addConfiguration("pingTimeout", 10)
+                .addConfiguration("pingTimeout", 500)
                 .addConfiguration("ipAddress_maskMap", ipAddressEx)
                 .addOutputLane("lane")
                 .build();

@@ -78,33 +78,35 @@ public abstract class OnlineSource extends BaseSource {
         if (lastSourceOffset != null) {
             nextSourceOffset = Long.parseLong(lastSourceOffset);
         }
-        int numRecords = 0;
-
         // TODO: As the developer, implement your logic that reads from a data source in this method.
 
         // Create records and add to batch. Records must have a string id. This can include the source offset
         // or other metadata to help uniquely identify the record itself.
         try {
             Record record = getContext().createRecord(String.valueOf(nextSourceOffset));
-            Map<String, Field> map = new HashMap<>();
+
             List <Field> list  = new ArrayList<>();
             long startTime = System.currentTimeMillis();
             if(usePing()) {
+                long finalNextSourceOffset = nextSourceOffset;
                 ipv4List.forEach((item) -> {
                     for (String eachPing : item.getAvailableIPs(65535)) {
-                        map.put("pingResult", Field.create(runPingCommand(eachPing)));
+                        Map<String, Field> map = new HashMap<>();
+                        String result = runPingCommand(eachPing);
+                        if(result.equals("")){ map.put("pingResult", Field.create(eachPing));}
+                        else{ map.put("pingResult", Field.create(result)); }
                         list.add(Field.create(map));
                     }
                 });
-            }
 
+            }
             long endTime = System.currentTimeMillis();
             long interval = getInterval(startTime, endTime);
             record.set(Field.create(list));
             batchMaker.addRecord(record);
-            sleep(interval);
             ++nextSourceOffset;
-            ++numRecords;
+            sleep(interval);
+
         }
         catch (InterruptedException e) { e.printStackTrace(); }
         finally { return String.valueOf(nextSourceOffset); }
@@ -116,24 +118,36 @@ public abstract class OnlineSource extends BaseSource {
     }
 
     private String runPingCommand(String ip){
+        Process p = null;
+        BufferedReader in = null;
+        String inputLine="";
         try {
-            Process p = new ProcessBuilder("ping", ip).start();
-            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String inputLine;
+            p = new ProcessBuilder("ping", ip).start();
+            in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
             sleep(getPingTimeout());
             if(in.ready()){
                 in.readLine();
                 inputLine = in.readLine();
-                p.destroy();
-                in.close();
-                return inputLine;
+                //p.destroy();
+                //in.close();
             }
         } catch (IOException | NullPointerException e) {
             System.out.println(e);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return "";
+        finally {
+            try {
+                assert p != null;
+                p.destroy();
+                assert in != null;
+                in.close();
+            } catch (IOException e) {
+                //e.printStackTrace();
+            }
+        }
+        return inputLine;
     }
 
     public abstract Map<String, String> getIPMap();
