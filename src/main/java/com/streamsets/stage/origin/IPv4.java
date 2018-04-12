@@ -3,8 +3,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IPv4 {
-    int baseIPnumeric;
-    int netmaskNumeric;
+    private int baseIPnumeric;
+    private int netmaskNumeric;
 
     /**
      * Specify IP address and netmask like: new

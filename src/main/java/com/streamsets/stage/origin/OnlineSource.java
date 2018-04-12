@@ -24,14 +24,8 @@ import com.streamsets.pipeline.api.Field;
 import com.streamsets.pipeline.api.Record;
 import com.streamsets.pipeline.api.base.BaseSource;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.Buffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.MessageFormat;
+import java.util.*;
 
 import static java.lang.Thread.sleep;
 
@@ -74,78 +68,61 @@ public abstract class OnlineSource extends BaseSource {
     @Override
     public String produce(String lastSourceOffset, int maxBatchSize, BatchMaker batchMaker) {
         // Offsets can vary depending on the data source. Here we use an integer as an example only.
-        long nextSourceOffset = 0;
+        /*long nextSourceOffset = 0;
         if (lastSourceOffset != null) {
             nextSourceOffset = Long.parseLong(lastSourceOffset);
-        }
+        }*/
         // TODO: As the developer, implement your logic that reads from a data source in this method.
 
         // Create records and add to batch. Records must have a string id. This can include the source offset
         // or other metadata to help uniquely identify the record itself.
         try {
-            Record record = getContext().createRecord(String.valueOf(nextSourceOffset));
+            //Record record = getContext().createRecord(String.valueOf(nextSourceOffset));
 
-            List <Field> list  = new ArrayList<>();
+            //List <Field> list  = new ArrayList<>();
             long startTime = System.currentTimeMillis();
-            if(usePing()) {
-                ipv4List.forEach((item) -> {
-                    for (String eachPing : item.getAvailableIPs(65535)) {
+
+            ipv4List.forEach((IPv4 item) -> {
+                for (String eachIP : item.getAvailableIPs(65535)) {
+                    if(usePing()) {
                         Map<String, Field> map = new HashMap<>();
-                        String result = runPingCommand(eachPing);
-                        if(result.equals("")){ map.put("pingResult", Field.create(eachPing));}
-                        else{ map.put("pingResult", Field.create(result)); }
-                        list.add(Field.create(map));
+                        String result = new PingCmd().runPingCommand(eachIP, getPingTimeout());
+                        if (result.equals("")) { map.put("pingResult", Field.create(eachIP)); }
+                        else { map.put("pingResult", Field.create(result));}
+                        //list.add(Field.create(map));
+                        Record record = getContext().createRecord(String.valueOf(UUID.randomUUID()));
+                        record.set(Field.create(map));
+                        batchMaker.addRecord(record);
                     }
-                });
-            }
+                    if(useHttpresponse()) {
+                        Map<String, Field> map = new HashMap<>();
+                        HttpResponseCmd response = new HttpResponseCmd();
+                        int result = response.runHttpResponseCommand(eachIP, getHttpPort(),getHttpSubAddress(),getPingTimeout());
+                        long responseTimegap = response.getTimegapLong();
+                        map.put("httpResult", Field.create(MessageFormat.format("{0},{1},{2}", eachIP, result, responseTimegap)));
+                        //list.add(Field.create(map));
+                        Record record = getContext().createRecord(String.valueOf(UUID.randomUUID()));
+                        record.set(Field.create(map));
+                        batchMaker.addRecord(record);
+                    }
+
+                }
+            });
             long endTime = System.currentTimeMillis();
             long interval = getInterval(startTime, endTime);
-            record.set(Field.create(list));
-            batchMaker.addRecord(record);
-            ++nextSourceOffset;
+            //record.set(Field.create(list));
+            //batchMaker.addRecord(record);
+            //++nextSourceOffset;
             sleep(interval);
 
         }
         catch (InterruptedException e) { e.printStackTrace(); }
-        finally { return String.valueOf(nextSourceOffset); }
+        return "0";
     }
     private long getInterval (long startTime, long endTime){
         long elaspedTime = (endTime - startTime);
         long interval = getPingInterval()*1000 - elaspedTime;
         return interval > 0 ? interval : 0;
-    }
-
-    private String runPingCommand(String ip){
-        Process p = null;
-        BufferedReader in = null;
-        String inputLine="";
-        try {
-            p = new ProcessBuilder("ping", ip).start();
-            in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-            sleep(getPingTimeout());
-            if(in.ready()){
-                in.readLine();
-                inputLine = in.readLine();
-                //p.destroy();
-                //in.close();
-            }
-        } catch (IOException | NullPointerException e) {
-            System.out.println(e);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        finally {
-            try {
-                assert p != null;
-                p.destroy();
-                assert in != null;
-                in.close();
-            } catch (IOException e) {
-                //e.printStackTrace();
-            }
-        }
-        return inputLine;
     }
 
     public abstract Map<String, String> getIPMap();
@@ -154,4 +131,8 @@ public abstract class OnlineSource extends BaseSource {
     public abstract boolean useHttpresponse();
     public abstract int getPingTimeout();
     public abstract int getPingInterval();
+
+    public abstract String getHttpSubAddress();
+
+    public abstract int getHttpPort();
 }

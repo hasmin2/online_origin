@@ -35,14 +35,16 @@ public class TestOnlineSource {
     @Test
     public void testOrigin() throws Exception {
         ipAddressEx = new HashMap<>();
-        String ipAddress = "10.50.117.27";
-        ipAddressEx.put(ipAddress, "255.255.255.255");
+        String ipAddress = "127.0.0.1";
+        ipAddressEx.put(ipAddress, "255.255.255.224");
+        int httpPort = 18630;
         //ipAddressEx.put("127.0.1.1", "255.255.255.0");
 
         SourceRunner runner = new SourceRunner.Builder(OnlineDSource.class)
-                .addConfiguration("isHttp", false)
+                .addConfiguration("isHttp", true)
+                .addConfiguration("httpPort", httpPort)
                 .addConfiguration("isWebsocket", false)
-                .addConfiguration("isPing", true)
+                .addConfiguration("isPing", false)
                 .addConfiguration("pingInterval", 2)
                 .addConfiguration("pingTimeout", 500)
                 .addConfiguration("ipAddress_maskMap", ipAddressEx)
@@ -57,8 +59,8 @@ public class TestOnlineSource {
             Assert.assertEquals("1", output.getNewOffset());
             List<Record> records = output.getRecords().get("lane");
             Assert.assertEquals(1, records.size());
-            Assert.assertTrue(records.get(0).has("/pingResult"));
-            Assert.assertEquals(ipAddress.contains(ipAddress), records.get(0).get("/pingResult").getValueAsString().contains(ipAddress));
+            Assert.assertTrue(records.get(0).has("/"));
+            Assert.assertEquals(ipAddress.contains(ipAddress), records.get(0).get().getValue().toString().contains(ipAddress));
 
         } finally {
             runner.runDestroy();

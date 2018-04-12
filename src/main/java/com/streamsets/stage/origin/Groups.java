@@ -25,7 +25,6 @@ import com.streamsets.pipeline.api.Label;
 @GenerateResourceBundle
 public enum Groups implements Label {
     Network("Network"),
-    Ping("Ping"),
     Websocket("Websocket"),
     Http("Http")
     ;

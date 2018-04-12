@@ -83,10 +83,8 @@ public class OnlineDSource extends OnlineSource {
             defaultValue = "150",
             label = "Timeout for each Host (MilliSec)",
             displayPosition = 10,
-            group = "Ping",
-            description = "Max timeout for each Host. Smaller timeout setting may ignore response from host. Bigger timeout setting may cause unreach some hosts",
-            dependsOn = "isPing",
-            triggeredByValue = "true"
+            group = "Network",
+            description = "Max timeout for each Host. Smaller timeout setting may ignore response from host. Bigger timeout setting may cause not to reach some hosts"
     )
     public int pingTimeout;
 
@@ -94,15 +92,39 @@ public class OnlineDSource extends OnlineSource {
             required = true,
             type = ConfigDef.Type.NUMBER,
             defaultValue = "150",
-            label = "Ping batch interval (Sec)",
+            label = "Each job batch interval (Sec)",
             displayPosition = 10,
-            group = "Ping",
-            description = "Max Interval secs for pinging batch job. Smaller setting may ignore response from host. Bigger Setting may not recognize correct status ",
-            dependsOn = "isPing",
-            triggeredByValue = "true"
+            group = "Network",
+            description = "Max Interval secs for pinging batch job. Smaller setting may ignore response from host. Bigger Setting may not recognize correct status "
     )
     public int pingInterval;
 
+    @ConfigDef(
+            required = true,
+            type = ConfigDef.Type.NUMBER,
+            defaultValue = "80",
+            label = "Port",
+            displayPosition = 10,
+            group = "Http",
+            description = "Http Response Port to communicate",
+            dependsOn = "isHttp",
+            triggeredByValue = "true"
+    )
+    public int httpPort;
+
+    @ConfigDef(
+            required = false,
+            type = ConfigDef.Type.STRING,
+            defaultValue = "",
+            label = "Sub Address",
+            displayPosition = 10,
+            group = "Http",
+            description = "Sub Address ? for the Http Response proper path",
+            dependsOn = "isHttp",
+            triggeredByValue = "true"
+    )
+
+    public String httpSubAddress;
 
     /** {@inheritDoc} */
     @Override
@@ -117,4 +139,11 @@ public class OnlineDSource extends OnlineSource {
     public int getPingTimeout() { return pingTimeout; }
     @Override
     public int getPingInterval() { return pingInterval; }
+    @Override
+    public String getHttpSubAddress (){
+
+        return (null == httpSubAddress)? "":httpSubAddress;
+    }
+    @Override
+    public int getHttpPort (){ return httpPort; }
 }
