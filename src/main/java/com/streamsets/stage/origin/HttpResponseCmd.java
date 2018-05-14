@@ -11,7 +11,7 @@ public class HttpResponseCmd {
     private long duration = 0;
     private int returnValue =0;
     int runHttpResponseCommand(String ipAddress, int port, String subAddress, int networkTimeout) {
-        //Unirest.setTimeouts(networkTimeout, networkTimeout/2);
+        Unirest.setTimeouts(networkTimeout, networkTimeout/2);
         try {
             long startTime = System.currentTimeMillis();
             response = Unirest.get("http://"+ipAddress+":"+Integer.toString(port)+subAddress)
