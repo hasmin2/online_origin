@@ -36,16 +36,16 @@ public class TestOnlineSource {
     public void testOrigin() throws Exception {
         ipAddressEx = new HashMap<>();
         String ipAddress = "127.0.0.1";
-        ipAddressEx.put(ipAddress, "255.255.255.224");
+        ipAddressEx.put(ipAddress, "255.255.255.255");
         int httpPort = 18630;
         //ipAddressEx.put("127.0.1.1", "255.255.255.0");
 
         SourceRunner runner = new SourceRunner.Builder(OnlineDSource.class)
-                .addConfiguration("isHttp", true)
+                .addConfiguration("isHttp", false)
                 .addConfiguration("httpPort", httpPort)
                 .addConfiguration("isWebsocket", false)
-                .addConfiguration("isPing", false)
-                .addConfiguration("pingInterval", 2)
+                .addConfiguration("isPing", true)
+                .addConfiguration("pingInterval", 10)
                 .addConfiguration("pingTimeout", 500)
                 .addConfiguration("ipAddress_maskMap", ipAddressEx)
                 .addOutputLane("lane")

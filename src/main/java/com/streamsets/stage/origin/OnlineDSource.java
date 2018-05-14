@@ -123,8 +123,8 @@ public class OnlineDSource extends OnlineSource {
             dependsOn = "isHttp",
             triggeredByValue = "true"
     )
-
     public String httpSubAddress;
+
 
     /** {@inheritDoc} */
     @Override

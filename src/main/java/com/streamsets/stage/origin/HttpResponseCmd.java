@@ -7,6 +7,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 public class HttpResponseCmd {
     private HttpResponse<String> response=null;
     private long duration = 0;
+    private int returnValue =0;
     int runHttpResponseCommand(String ipAddress, int port, String subAddress, int networkTimeout) {
         Unirest.setTimeouts(networkTimeout, networkTimeout/2);
         try {
@@ -16,12 +17,12 @@ public class HttpResponseCmd {
             //System.out.println(response.getStatus());
             long endTime = System.currentTimeMillis();
             duration = endTime - startTime;
-            return response.getStatus();
+            returnValue = response.getStatus();
 
         } catch (UnirestException e) {
             e.printStackTrace();
-            return 0;
         }
+        return returnValue;
     }
     long getTimegapLong(){ return duration; }
 }

@@ -35,6 +35,7 @@ import static java.lang.Thread.sleep;
  */
 public abstract class OnlineSource extends BaseSource {
     private List <IPv4> ipv4List;
+
     /**
      * Gives access to the UI configuration of the stage provided by the {@link OnlineDSource} class.
      */
@@ -110,13 +111,17 @@ public abstract class OnlineSource extends BaseSource {
             });
             long endTime = System.currentTimeMillis();
             long interval = getInterval(startTime, endTime);
+            //System.out.println(interval);
             //record.set(Field.create(list));
             //batchMaker.addRecord(record);
             //++nextSourceOffset;
             sleep(interval);
 
+
         }
-        catch (InterruptedException e) { e.printStackTrace(); }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return "0";
     }
     private long getInterval (long startTime, long endTime){
