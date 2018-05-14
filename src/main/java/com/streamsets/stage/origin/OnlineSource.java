@@ -69,20 +69,12 @@ public abstract class OnlineSource extends BaseSource {
     @Override
     public String produce(String lastSourceOffset, int maxBatchSize, BatchMaker batchMaker) {
         // Offsets can vary depending on the data source. Here we use an integer as an example only.
-        /*long nextSourceOffset = 0;
-        if (lastSourceOffset != null) {
-            nextSourceOffset = Long.parseLong(lastSourceOffset);
-        }*/
         // TODO: As the developer, implement your logic that reads from a data source in this method.
 
         // Create records and add to batch. Records must have a string id. This can include the source offset
         // or other metadata to help uniquely identify the record itself.
         try {
-            //Record record = getContext().createRecord(String.valueOf(nextSourceOffset));
-
-            //List <Field> list  = new ArrayList<>();
             long startTime = System.currentTimeMillis();
-
             ipv4List.forEach((IPv4 item) -> {
                 for (String eachIP : item.getAvailableIPs(65535)) {
                     if(usePing()) {
@@ -98,6 +90,7 @@ public abstract class OnlineSource extends BaseSource {
                     if(useHttpresponse()) {
                         Map<String, Field> map = new HashMap<>();
                         HttpResponseCmd response = new HttpResponseCmd();
+                        response.shutDown();
                         int result = response.runHttpResponseCommand(eachIP, getHttpPort(),getHttpSubAddress(),getPingTimeout());
                         long responseTimegap = response.getTimegapLong();
                         map.put("httpResult", Field.create(MessageFormat.format("{0},{1},{2}", eachIP, result, responseTimegap)));
@@ -115,6 +108,7 @@ public abstract class OnlineSource extends BaseSource {
             //record.set(Field.create(list));
             //batchMaker.addRecord(record);
             //++nextSourceOffset;
+            System.out.println(interval);
             sleep(interval);
 
 
@@ -122,7 +116,7 @@ public abstract class OnlineSource extends BaseSource {
         catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return "0";
+        return "";
     }
     private long getInterval (long startTime, long endTime){
         long elaspedTime = (endTime - startTime);

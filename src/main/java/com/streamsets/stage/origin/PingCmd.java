@@ -21,12 +21,11 @@ public class PingCmd {
         catch (InterruptedException e) { e.printStackTrace(); }
         finally {
             try {
-                assert p != null; p.destroyForcibly();
-                p.waitFor();
-                assert in != null; in.close();
-            } catch (IOException ignored) {} catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+                assert p != null;
+                p.destroy();
+                assert in != null;
+                in.close();
+            } catch (IOException ignored) {}
         }
         return inputLine;
     }

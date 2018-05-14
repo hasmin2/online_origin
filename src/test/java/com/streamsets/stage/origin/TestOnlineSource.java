@@ -41,10 +41,10 @@ public class TestOnlineSource {
         //ipAddressEx.put("127.0.1.1", "255.255.255.0");
 
         SourceRunner runner = new SourceRunner.Builder(OnlineDSource.class)
-                .addConfiguration("isHttp", false)
+                .addConfiguration("isHttp", true)
                 .addConfiguration("httpPort", httpPort)
                 .addConfiguration("isWebsocket", false)
-                .addConfiguration("isPing", true)
+                .addConfiguration("isPing", false)
                 .addConfiguration("pingInterval", 10)
                 .addConfiguration("pingTimeout", 500)
                 .addConfiguration("ipAddress_maskMap", ipAddressEx)
