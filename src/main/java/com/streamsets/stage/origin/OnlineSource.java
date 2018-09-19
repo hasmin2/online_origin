@@ -90,7 +90,7 @@ public abstract class OnlineSource extends BaseSource {
                     if(useHttpresponse()) {
                         Map<String, Field> map = new HashMap<>();
                         HttpResponseCmd response = new HttpResponseCmd();
-                        response.shutDown();
+                        //response.shutDown();
                         int result = response.runHttpResponseCommand(eachIP, getHttpPort(),getHttpSubAddress(),getPingTimeout());
                         long responseTimegap = response.getTimegapLong();
                         map.put("httpResult", Field.create(MessageFormat.format("{0},{1},{2}", eachIP, result, responseTimegap)));

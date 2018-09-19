@@ -20,10 +20,11 @@ public class HttpResponseCmd {
             long endTime = System.currentTimeMillis();
             duration = endTime - startTime;
             returnValue = response.getStatus();
-
-        } catch (UnirestException e) {
+            Unirest.shutdown();
+        } catch (UnirestException | IOException e) {
             e.printStackTrace();
         }
+
         return returnValue;
     }
     void shutDown(){
