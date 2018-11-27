@@ -24,6 +24,7 @@ import com.streamsets.pipeline.api.Field;
 import com.streamsets.pipeline.api.Record;
 import com.streamsets.pipeline.api.base.BaseSource;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.*;
 
@@ -35,7 +36,8 @@ import static java.lang.Thread.sleep;
  */
 public abstract class OnlineSource extends BaseSource {
     private List <IPv4> ipv4List;
-
+    private Map<String, Field> map = new HashMap<>();
+    private HttpResponseCmd response = new HttpResponseCmd();
     /**
      * Gives access to the UI configuration of the stage provided by the {@link OnlineDSource} class.
      */
@@ -69,51 +71,33 @@ public abstract class OnlineSource extends BaseSource {
     @Override
     public String produce(String lastSourceOffset, int maxBatchSize, BatchMaker batchMaker) {
         // Offsets can vary depending on the data source. Here we use an integer as an example only.
-        // TODO: As the developer, implement your logic that reads from a data source in this method.
-
         // Create records and add to batch. Records must have a string id. This can include the source offset
         // or other metadata to help uniquely identify the record itself.
         try {
             long startTime = System.currentTimeMillis();
-            ipv4List.forEach((IPv4 item) -> {
+            for (IPv4 item : ipv4List) {
                 for (String eachIP : item.getAvailableIPs(65535)) {
-                    if(usePing()) {
-                        Map<String, Field> map = new HashMap<>();
+                    Record record = getContext().createRecord(String.valueOf(UUID.randomUUID()));
+                    if (usePing()) {
                         String result = new PingCmd().runPingCommand(eachIP, getPingTimeout());
                         if (result.equals("")) { map.put("pingResult", Field.create(eachIP)); }
-                        else { map.put("pingResult", Field.create(result));}
-                        //list.add(Field.create(map));
-                        Record record = getContext().createRecord(String.valueOf(UUID.randomUUID()));
-                        record.set(Field.create(map));
-                        batchMaker.addRecord(record);
+                        else { map.put("pingResult", Field.create(result)); }
                     }
-                    if(useHttpresponse()) {
-                        Map<String, Field> map = new HashMap<>();
-                        HttpResponseCmd response = new HttpResponseCmd();
-                        //response.shutDown();
-                        int result = response.runHttpResponseCommand(eachIP, getHttpPort(),getHttpSubAddress(),getPingTimeout());
+                    if (useHttpresponse()) {
+                        int result = response.runHttpResponseCommand(eachIP, getHttpPort(), getHttpSubAddress(), getPingTimeout());
                         long responseTimegap = response.getTimegapLong();
                         map.put("httpResult", Field.create(MessageFormat.format("{0},{1},{2}", eachIP, result, responseTimegap)));
                         //list.add(Field.create(map));
-                        Record record = getContext().createRecord(String.valueOf(UUID.randomUUID()));
-                        record.set(Field.create(map));
-                        batchMaker.addRecord(record);
                     }
-
+                    record.set(Field.create(map));
+                    batchMaker.addRecord(record);
                 }
-            });
+            }
             long endTime = System.currentTimeMillis();
             long interval = getInterval(startTime, endTime);
-            //System.out.println(interval);
-            //record.set(Field.create(list));
-            //batchMaker.addRecord(record);
-            //++nextSourceOffset;
-            System.out.println(interval);
             sleep(interval);
-
-
         }
-        catch (InterruptedException e) {
+        catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
         return "";
