@@ -19,11 +19,9 @@ class HttpResponseCmd {
             long endTime = System.currentTimeMillis();
             duration = endTime - startTime;
             returnValue = response.getStatus();
-            Unirest.shutdown();
-        } catch (UnirestException | IOException e) {
-                Unirest.shutdown();
-            e.printStackTrace();
         }
+        catch (UnirestException e) { e.printStackTrace(); }
+        finally { Unirest.shutdown(); }
 
         return returnValue;
     }
