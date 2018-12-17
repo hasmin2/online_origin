@@ -19,6 +19,7 @@
  */
 package com.streamsets.stage.origin;
 
+import com.mashape.unirest.http.Unirest;
 import com.streamsets.pipeline.api.BatchMaker;
 import com.streamsets.pipeline.api.Field;
 import com.streamsets.pipeline.api.Record;
@@ -37,7 +38,6 @@ import static java.lang.Thread.sleep;
 public abstract class OnlineSource extends BaseSource {
     private List <IPv4> ipv4List;
     private Map<String, Field> map = new HashMap<>();
-    private HttpResponseCmd response = new HttpResponseCmd();
     /**
      * Gives access to the UI configuration of the stage provided by the {@link OnlineDSource} class.
      */
@@ -73,6 +73,8 @@ public abstract class OnlineSource extends BaseSource {
         // Offsets can vary depending on the data source. Here we use an integer as an example only.
         // Create records and add to batch. Records must have a string id. This can include the source offset
         // or other metadata to help uniquely identify the record itself.
+        long nextSourceOffset = 0;
+        if (lastSourceOffset != null) { nextSourceOffset = Long.parseLong(lastSourceOffset); }
         try {
             long startTime = System.currentTimeMillis();
             for (IPv4 item : ipv4List) {
@@ -84,10 +86,11 @@ public abstract class OnlineSource extends BaseSource {
                         else { map.put("pingResult", Field.create(result)); }
                     }
                     if (useHttpresponse()) {
-                        int result = response.runHttpResponseCommand(eachIP, getHttpPort(), getHttpSubAddress(), getPingTimeout());
+                        HttpResponseCmd response = new HttpResponseCmd();
+                        int result = response.runHttpResponseCommand(eachIP, getHttpPort(), getHttpSubAddress());
                         long responseTimegap = response.getTimegapLong();
                         map.put("httpResult", Field.create(MessageFormat.format("{0},{1},{2}", eachIP, result, responseTimegap)));
-                        //list.add(Field.create(map));
+
                     }
                     record.set(Field.create(map));
                     batchMaker.addRecord(record);
@@ -97,10 +100,11 @@ public abstract class OnlineSource extends BaseSource {
             long interval = getInterval(startTime, endTime);
             sleep(interval);
         }
-        catch (InterruptedException | IOException e) {
+        catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return "";
+        ++nextSourceOffset;
+        return String.valueOf(nextSourceOffset);
     }
     private long getInterval (long startTime, long endTime){
         long elaspedTime = (endTime - startTime);
