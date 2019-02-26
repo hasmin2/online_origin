@@ -130,7 +130,7 @@ public class OnlineDSource extends OnlineSource {
     @Override
     public Map<String, String> getIPMap() { return ipAddress_maskMap; }
     @Override
-    public boolean usePing(){ return isPing; };
+    public boolean usePing(){ return isPing; }
     @Override
     public boolean useWebsocket(){ return isWebsocket; }
     @Override

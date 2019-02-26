@@ -37,7 +37,6 @@ import static java.lang.Thread.sleep;
  */
 public abstract class OnlineSource extends BaseSource {
     private List <IPv4> ipv4List;
-    private Map<String, Field> map = new HashMap<>();
     /**
      * Gives access to the UI configuration of the stage provided by the {@link OnlineDSource} class.
      */
@@ -55,7 +54,9 @@ public abstract class OnlineSource extends BaseSource {
 
         // If issues is not empty, the UI will inform the user of each configuration issue in the list.
         ipv4List = new ArrayList<>();
-        for( String key : getIPMap().keySet() ){ ipv4List.add(new IPv4(key, getIPMap().get(key))); }
+        for( String key : getIPMap().keySet() ){
+            ipv4List.add(new IPv4(key, getIPMap().get(key)));
+        }
         //System.out.println(ipv4List.size());
         return issues;
     }
@@ -73,16 +74,16 @@ public abstract class OnlineSource extends BaseSource {
         // Offsets can vary depending on the data source. Here we use an integer as an example only.
         // Create records and add to batch. Records must have a string id. This can include the source offset
         // or other metadata to help uniquely identify the record itself.
-        long nextSourceOffset = 0;
-        if (lastSourceOffset != null) { nextSourceOffset = Long.parseLong(lastSourceOffset); }
         try {
             long startTime = System.currentTimeMillis();
+
             for (IPv4 item : ipv4List) {
                 for (String eachIP : item.getAvailableIPs(65535)) {
+                    Map<String, Field> map = new HashMap<>();
                     Record record = getContext().createRecord(String.valueOf(UUID.randomUUID()));
                     if (usePing()) {
                         String result = new PingCmd().runPingCommand(eachIP, getPingTimeout());
-                        if (result.equals("")) { map.put("pingResult", Field.create(eachIP)); }
+                        if (result.equals("")) { map.put("pingResult", Field.create(eachIP));}
                         else { map.put("pingResult", Field.create(result)); }
                     }
                     if (useHttpresponse()) {
@@ -96,6 +97,7 @@ public abstract class OnlineSource extends BaseSource {
                     batchMaker.addRecord(record);
                 }
             }
+
             long endTime = System.currentTimeMillis();
             long interval = getInterval(startTime, endTime);
             sleep(interval);
@@ -103,8 +105,8 @@ public abstract class OnlineSource extends BaseSource {
         catch (InterruptedException e) {
             e.printStackTrace();
         }
-        ++nextSourceOffset;
-        return String.valueOf(nextSourceOffset);
+
+        return "";
     }
     private long getInterval (long startTime, long endTime){
         long elaspedTime = (endTime - startTime);
